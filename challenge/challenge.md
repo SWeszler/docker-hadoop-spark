@@ -97,12 +97,12 @@ Access it via `http://localhost:4040` or through the YARN ResourceManager UI (`h
 
 Once your code is ready, you shouldn't just run it interactively forever. You should package it and submit it to the cluster! Here is the recommended step-by-step approach using the provided templates:
 
-1. **Pick a Template:** Copy one of the language folders from `template/` (e.g., `template/python`) into a new directory for your job, like `dags/log-analyzer/`.
+1. **Pick a Template:** Copy one of the language folders from `template/` (e.g., `template/python`) into a new directory for your job, like `jobs/log-analyzer/`.
 2. **Add Your Code:** Place your finalized Spark script (e.g., `main.py` or your compiled `.jar`) into this new directory.
 3. **Update the Dockerfile:** Edit the `Dockerfile` inside your new directory to copy your script/jar into the image, and ensure the environment variables (like `SPARK_APPLICATION_PYTHON_LOCATION` or `SPARK_APPLICATION_MAIN_CLASS`) point to your code.
 4. **Build the Job Image:**
    ```bash
-   cd dags/log-analyzer/
+   cd jobs/log-analyzer/
    docker build -t my-log-analyzer .
    ```
 5. **Submit the Job:** Run your new image, connecting it to the same Docker network as your Spark cluster:
