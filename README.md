@@ -62,20 +62,41 @@ To deploy an the HDFS-Spark-Hive cluster, run:
 
 `docker-compose` creates a docker network that can be found by running `docker network list`, e.g. `docker-hadoop-spark-hive_default`.
 
-Run `docker network inspect` on the network (e.g. `docker-hadoop-spark-hive_default`) to find the IP the hadoop interfaces are published on. Access these interfaces with the following URLs:
+Web UIs (how to access)
 
-* Namenode: http://<dockerhadoop_IP_address>:9870/dfshealth.html#tab-overview
-* History server: http://<dockerhadoop_IP_address>:8188/applicationhistory
-* Datanode: http://<dockerhadoop_IP_address>:9864/
-* Nodemanager: http://<dockerhadoop_IP_address>:8042/node
-* Resource manager: http://<dockerhadoop_IP_address>:8088/
-* Spark master: http://<dockerhadoop_IP_address>:8080/
-* Spark worker: http://<dockerhadoop_IP_address>:8081/
-* Hive: http://<dockerhadoop_IP_address>:10000
+The Hadoop/Spark services expose several helpful web interfaces. If running Docker on your laptop (Docker Desktop), most interfaces are available via localhost. If using a remote Docker host, substitute <dockerhadoop_IP_address> with the host IP found via `docker network inspect`.
 
-## Important note regarding Docker Desktop
-Since Docker Desktop turned “Expose daemon on tcp://localhost:2375 without TLS” off by default there have been all kinds of connection problems running the complete docker-compose. Turning this option on again (Settings > General > Expose daemon on tcp://localhost:2375 without TLS) makes it all work. I’m still looking for a more secure solution to this.
+Common URLs (localhost or <dockerhadoop_IP_address>):
 
+Below is the current accessibility status for each UI (why a URL like http://localhost:8188/applicationhistory may not work): many services run inside containers and are not published to the host by default. If a port is not mapped in docker-compose.yml you cannot reach it via localhost.
+
+Published to host (accessible via localhost):
+
+* Namenode (HDFS web UI / Explorer): http://localhost:9870/explorer.html#/  — mapped in docker-compose (9870:9870)
+* DataNode: http://localhost:9864/  — mapped (9864:9864)
+* Spark Master (cluster UI): http://localhost:8080/  — mapped (8080:8080)
+* Spark worker: http://localhost:8081/  — mapped (8081:8081)
+* Spark Application UI (per-app, default port on driver): http://localhost:4040/  — mapped on spark-master (4040:4040) but only visible while an application runs
+* HiveServer2 (JDBC): port 10000 is published (JDBC, not a web UI): connect with `jdbc:hive2://localhost:10000`
+* Hive metastore service: http://localhost:9083/ (thrift) — mapped (9083:9083) but not a browser dashboard
+* Trino coordinator UI: http://localhost:8089/  — mapped (host 8089 -> container 8080)
+
+Not published to host by default (internal-only — reachable from other containers):
+
+* ResourceManager (YARN): internal port 8088 — not published in docker-compose. Example why http://localhost:8088/ fails. Options: publish 8088:8088 in docker-compose, curl the service from a container (`docker exec -it namenode curl http://resourcemanager:8088/`), or use the container IP.
+* NodeManager (node details): internal port 8042 — not published by default. See same access options as ResourceManager.
+* MapReduce / History Server (job history): internal port 8188 — not published, so http://localhost:8188/applicationhistory will fail unless port is published.
+* Spark History Server: not configured/published in this compose file (so http://localhost:18080 will not be available).
+
+Other reasons a UI may be unreachable:
+
+* Service not yet started or failed to start — check container logs (`docker logs <container>`).
+* The UI is per-application and only exists while a job runs (e.g., Spark driver UI at 4040 shows only during app lifetime).
+* Docker Desktop networking (on macOS/Windows) sometimes routes differently — use published host ports or exec into a container to curl internals.
+
+If you want, the compose file can be updated to publish additional ports (e.g., 8088, 8042, 8188) so all UIs work via localhost. Otherwise use the container network or inspect container IPs to access internal dashboards.
+
+These notes should clarify why some URLs (like http://localhost:8188/applicationhistory) are not accessible by default and what to do about it.
 
 ## Quick Start HDFS
 
