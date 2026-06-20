@@ -2,91 +2,61 @@
 
 Your Mission: You are a data engineer at a rapidly growing online news portal. To better understand user engagement, identify popular content, and detect potential issues, you've been tasked with analyzing the web server access logs. Your goal is to build a robust Apache Spark application that can efficiently process these logs, extract meaningful insights, and be optimized for performance on your Hadoop cluster.
 
-## Core Learning Focus:
+## Core Learning Focus
+* **Spark Application Anatomy:** Understanding the roles of the Driver, Executors, SparkContext/SparkSession, Jobs, Stages, and Tasks. You'll be using the Spark UI extensively.
+* **Parallelism in Spark:** Observing how Spark distributes data and computation, how partitioning works, and how you can influence it.
+* **Spark Job Optimization:** Implementing various techniques to make your Spark jobs run faster and more efficiently, such as choosing appropriate data formats, caching, managing shuffles, and using efficient transformations.
 
-Spark Application Anatomy: Understanding the roles of the Driver, Executors, SparkContext/SparkSession, Jobs, Stages, and Tasks. You'll be using the Spark UI extensively.Parallelism in Spark: Observing how Spark distributes data and computation, how partitioning works, and how you can influence it.Spark Job Optimization: Implementing various techniques to make your Spark jobs run faster and more efficiently, such as choosing appropriate data formats, caching, managing shuffles, and using efficient transformations.Challenge Description 📝You will process web server access logs, typically in a Common Log Format (CLF) or a similar structure. Each log entry represents a request made to the server.Your Spark application (preferably in PySpark, but Scala or Java are also fine) should perform the following analyses:Traffic Summary:Count the total number of requests.Count the number of unique IP addresses (visitors).Calculate the total amount of data transferred (sum of response sizes).Content Popularity:Identify the top 20 most requested URLs (paths).Identify the top 10 most popular resource types (e.g., based on file extensions like .html, .jpg, .css, .js).HTTP Status Code Analysis:Count the occurrences of each HTTP status code (e.g., 200, 404, 500).Identify the top 10 IP addresses that generated the most 404 errors.Time-based Analysis:Calculate the number of requests per hour of the day (0-23).Identify the busiest hour(s).(Optional Advanced) Sessionization:Attempt to group requests from the same IP address into sessions. A session could be defined as a series of requests from the same IP where the time between consecutive requests is less than a threshold (e.g., 30 minutes). Calculate the average session duration. This is more complex and will involve window functions.Key Deliverables (Conceptual):A Spark script that performs these analyses.Observations and notes on how different configurations (e.g., number of partitions, caching strategies, data formats) affect performance and the execution plan as viewed in the Spark UI.An understanding of the stages and tasks generated for each part of your analysis.Example Data: Web Server Logs 📜A common log format looks like this:IP_ADDRESS - USER_ID [TIMESTAMP] "REQUEST_METHOD URL PROTOCOL" STATUS_CODE RESPONSE_SIZESample Log Entries (save as sample_logs.txt or similar):127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326
-192.168.1.10 - - [10/Oct/2000:13:55:38 -0700] "GET /index.html HTTP/1.1" 200 10240
-192.168.1.10 - - [10/Oct/2000:13:55:39 -0700] "GET /style.css HTTP/1.1" 200 512
-10.0.0.5 - user1 [10/Oct/2000:14:00:01 -0700] "POST /submit_form.php HTTP/1.1" 201 150
-203.0.113.45 - - [10/Oct/2000:14:00:15 -0700] "GET /images/logo.png HTTP/1.0" 200 5432
-198.51.100.12 - - [10/Oct/2000:14:01:00 -0700] "GET /non_existent_page.html HTTP/1.1" 404 200
-127.0.0.1 - frank [10/Oct/2000:14:05:22 -0700] "GET /favicon.ico HTTP/1.0" 200 100
-192.168.1.10 - - [10/Oct/2000:14:05:50 -0700] "GET /scripts/main.js HTTP/1.1" 200 8192
+## Challenge Description 📝
+You will process web server access logs, typically in a Common Log Format (CLF). Your Spark application should perform the following analyses:
 
-Generating a Larger Dataset:To truly test Spark's capabilities, you'll need a larger dataset (e.g., millions of lines). You can use a Python script like the one below to generate it.import random
-import datetime
-import time
-from faker import Faker
+### Traffic Summary
+* Count the total number of requests.
+* Count the number of unique IP addresses (visitors).
+* Calculate the total amount of data transferred (sum of response sizes).
 
-fake = Faker()
+### Content Popularity
+* Identify the top 20 most requested URLs (paths).
+* Identify the top 10 most popular resource types (e.g., based on file extensions like .html, .jpg, .css, .js).
 
-def generate_log_line():
-    ip = fake.ipv4()
-    user = random.choice(['-', fake.user_name()])
-    
-    # Generate a timestamp within the last year
-    now = datetime.datetime.now()
-    start_date = now - datetime.timedelta(days=365)
-    random_date = start_date + (now - start_date) * random.random()
-    timestamp = random_date.strftime('[%d/%b/%Y:%H:%M:%S %z]') # Common Log Format style
-    
-    method = random.choice(["GET", "POST", "PUT", "DELETE", "HEAD"])
-    
-    path_stems = ["/articles", "/products", "/services", "/about", "/contact", "/blog", "/news", "/media"]
-    path_details = [
-        f"/{fake.slug()}", 
-        f"/{fake.word()}/{random.randint(1,1000)}", 
-        f"/{fake.uri_path()}"
-    ]
-    resource_extensions = [".html", ".php", ".asp", ".jsp", ".pdf", ".jpg", ".png", ".gif", ".css", ".js", ""]
-    
-    url = random.choice(path_stems) + random.choice(path_details) + random.choice(resource_extensions)
-    if not url.startswith("/"): # Ensure leading slash
-        url = "/" + url
-        
-    protocol = random.choice(["HTTP/1.0", "HTTP/1.1", "HTTP/2.0"])
-    
-    status_code = random.choices(
-        [200, 201, 204, 301, 302, 304, 400, 401, 403, 404, 500, 502, 503], 
-        weights=[70, 5, 2, 3, 3, 2, 3, 2, 1, 5, 2, 1, 1], # Weighted towards 200 OK
-        k=1
-    )[0]
-    
-    response_size = 0
-    if status_code in [200, 201]:
-        response_size = random.randint(100, 50000) # bytes
-    elif status_code == 404:
-         response_size = random.randint(100, 1000)
-    else:
-        response_size = random.randint(0, 500)
+### HTTP Status Code Analysis
+* Count the occurrences of each HTTP status code (e.g., 200, 404, 500).
+* Identify the top 10 IP addresses that generated the most 404 errors.
 
-    return f'{ip} - {user} {timestamp} "{method} {url} {protocol}" {status_code} {response_size}'
+### Time-based Analysis
+* Calculate the number of requests per hour of the day (0-23).
+* Identify the busiest hour(s).
 
-if __name__ == "__main__":
-    num_lines = 1000000  # Generate 1 million log lines (adjust as needed)
-    output_file = "web_server_logs.txt"
-    
-    print(f"Generating {num_lines} log entries to {output_file}...")
-    start_time = time.time()
-    
-    with open(output_file, "w") as f:
-        for i in range(num_lines):
-            f.write(generate_log_line() + "\n")
-            if (i + 1) % (num_lines // 100) == 0: # Print progress every 1%
-                 print(f"Progress: {(i + 1) * 100 // num_lines}%", end='\r')
-    
-    end_time = time.time()
-    print(f"\nGenerated {num_lines} log entries in {end_time - start_time:.2f} seconds.")
+### (Optional Advanced) Sessionization
+Attempt to group requests from the same IP address into sessions. Calculate the average session duration.
 
+## The Data: Web Server Logs 📜
+A common log format looks like this:
+`IP_ADDRESS - USER_ID [TIMESTAMP] "REQUEST_METHOD URL PROTOCOL" STATUS_CODE RESPONSE_SIZE`
 
-Getting Data into HDFS (within your Docker environment):Run the Python script on your local machine to generate web_server_logs.txt.Copy the generated file to your Docker namenode container:docker cp web_server_logs.txt <namenode_container_name_or_id>:/tmp/web_server_logs.txt
+### Generating a Larger Dataset
+To truly test Spark's capabilities, you'll need a larger dataset (e.g., millions of lines). A script is provided in this folder (`LogGenerator.scala`) to generate it for you.
 
-(You can find the namenode container name using docker ps).Access the namenode container's shell:docker exec -it <namenode_container_name_or_id> /bin/bash
+Run the Scala script from your terminal:
+```bash
+scala challenge/LogGenerator.scala
+```
+This will create a large file named `web_server_logs.txt`.
 
-Inside the namenode container, put the file into HDFS:hdfs dfs -mkdir -p /data/logs
-hdfs dfs -put /tmp/web_server_logs.txt /data/logs/web_server_logs.txt
-
-(Adjust HDFS paths as you prefer).
+### Getting Data into HDFS
+1. Copy the generated file to your Docker namenode container:
+   ```bash
+   docker cp web_server_logs.txt namenode:/tmp/web_server_logs.txt
+   ```
+2. Access the namenode container's shell:
+   ```bash
+   docker exec -it namenode bash
+   ```
+3. Inside the namenode container, put the file into HDFS:
+   ```bash
+   hdfs dfs -mkdir -p /data/logs
+   hdfs dfs -put /tmp/web_server_logs.txt /data/logs/web_server_logs.txt
+   ```
 
 ## Hints for Solving & Learning Points 💡
 
