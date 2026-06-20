@@ -6,6 +6,52 @@ This is it: a Docker multi-container environment with Hadoop (HDFS), Spark and H
 
 The only thing lacking, is that Hive server doesn't start automatically. To be added when I understand how to do that in docker-compose.
 
+## Architecture Overview
+
+Here is a visual breakdown of all the containers running in this environment and exactly what their roles are:
+
+```mermaid
+graph TD
+    subgraph HDFS ["Hadoop Distributed File System (Storage)"]
+        NN[namenode<br/>Master: Manages file metadata & directory tree]
+        DN[datanode<br/>Worker: Stores the actual data blocks]
+        NN --- DN
+    end
+
+    subgraph YARN ["Hadoop YARN (Resource Management)"]
+        RM[resourcemanager<br/>Master: Allocates cluster resources]
+        NM[nodemanager<br/>Worker: Runs containers & jobs]
+        HS[historyserver<br/>UI: Keeps history of finished jobs]
+        RM --- NM
+        RM -.-> HS
+    end
+
+    subgraph SPARK ["Apache Spark (Compute Engine)"]
+        SM[spark-master<br/>Master: Manages Spark applications]
+        SW[spark-worker-1<br/>Worker: Executes Spark tasks in memory]
+        SM --- SW
+    end
+
+    subgraph HIVE ["Apache Hive (Data Warehouse)"]
+        HS2[hive-server<br/>SQL Interface for batch queries]
+        HM[hive-metastore<br/>Stores table schemas & locations]
+        PG[(hive-metastore-postgresql<br/>Relational DB holding metadata)]
+        HS2 --> HM
+        HM --> PG
+    end
+
+    subgraph PRESTO ["Presto (Fast SQL Engine)"]
+        PC[presto-coordinator<br/>Interactive SQL queries in-memory]
+    end
+
+    %% Key Data Flows
+    SM -. "Reads/Writes" .-> NN
+    NM -. "Accesses Data" .-> NN
+    HS2 -. "Reads/Writes" .-> NN
+    PC -. "Gets Schemas" .-> HM
+    PC -. "Reads Data directly" .-> NN
+```
+
 
 ## Quick Start
 
@@ -53,6 +99,32 @@ Create a HDFS directory /data//openbeer/breweries.
 Copy breweries.csv to HDFS:
 ```
   hdfs dfs -put breweries.csv /data/openbeer/breweries/breweries.csv
+```
+
+
+## Quick Start Hadoop MapReduce (WordCount)
+
+To test the underlying Hadoop YARN cluster directly (without Spark), you can run the classic WordCount MapReduce job provided in the `submit/` directory. This will spin up a temporary container, submit the pre-compiled Java `.jar` to the cluster, process files in HDFS, and exit.
+
+1. **Prepare Input Data:** Create an input directory in HDFS and add a text file to it (we'll use Hadoop's own README as an example).
+```bash
+  docker exec -it namenode bash
+  hdfs dfs -mkdir -p /input
+  hdfs dfs -put /opt/hadoop/README.txt /input/
+```
+
+2. **Build and Run the Job:** Build the Docker image from the `submit/` directory and run it attached to the Hadoop network.
+```bash
+  cd submit
+  docker build -t hadoop-wordcount .
+  docker run --network docker-hadoop-spark_default \
+             --env-file ../hadoop.env \
+             hadoop-wordcount
+```
+
+3. **Check the Output:** Once the container finishes running, check the results in HDFS.
+```bash
+  docker exec -it namenode hdfs dfs -cat /output/part-r-00000
 ```
 
 
