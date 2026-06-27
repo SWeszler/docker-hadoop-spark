@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-export SPARK_HOME=${SPARK_HOME:-/spark}
+export SPARK_HOME=${SPARK_HOME:-/opt/spark-3.0.0}
 export SPARK_MASTER_NAME=${SPARK_MASTER_NAME:-spark-master}
 export SPARK_MASTER_PORT=${SPARK_MASTER_PORT:-7077}
 export SPARK_MASTER_URL=${SPARK_MASTER_URL:-spark://${SPARK_MASTER_NAME}:${SPARK_MASTER_PORT}}
@@ -10,7 +10,7 @@ export DEFAULT_SPARK_APPLICATION_JAR_LOCATION="${HDFS_DEFAULT_FS}/apps/log-analy
 
 LOCAL_SPARK_APPLICATION_JAR_LOCATION=`find /app/target -iname '*-assembly-*.jar' | head -n1`
 
-if [ -z "$SPARK_APPLICATION_JAR_LOCATION" ] || [ "$SPARK_APPLICATION_JAR_LOCATION" = "/app/application.jar" ]; then
+if [ -z "$SPARK_APPLICATION_JAR_LOCATION" ]; then
 	SPARK_APPLICATION_JAR_LOCATION="$DEFAULT_SPARK_APPLICATION_JAR_LOCATION"
 	export SPARK_APPLICATION_JAR_LOCATION
 	echo "Using default cluster application JAR location ${SPARK_APPLICATION_JAR_LOCATION}"
@@ -57,6 +57,9 @@ echo "Submit application ${SPARK_APPLICATION_JAR_LOCATION} with main class ${SPA
 echo "Deploy mode cluster"
 echo "Passing Spark submit args ${SPARK_SUBMIT_ARGS}"
 echo "Passing application args ${SPARK_APPLICATION_ARGS}"
+
+# Remove after Spark master/worker and submit images use the same Java path.
+unset JAVA_HOME
 
 ${SPARK_HOME}/bin/spark-submit \
 	--class ${SPARK_APPLICATION_MAIN_CLASS} \

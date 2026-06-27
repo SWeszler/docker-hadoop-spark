@@ -4,7 +4,7 @@ This job sessionizes web server logs (CLF format) by IP, computes session durati
 
 ## Usage
 
-Build the fat JAR:
+Build the assembly JAR:
 
 ```sh
 cd jobs/log-analyzer-scala
@@ -30,7 +30,6 @@ Run in client deploy mode. The driver runs inside the temporary
 ```sh
 docker run --rm \
   --network docker-hadoop-spark_default \
-  -e ENABLE_INIT_DAEMON=false \
   -e SPARK_APPLICATION_ARGS="--input hdfs://namenode:9000/data/logs/web_server_logs.txt --hiveDb default --sessionGapMinutes 30" \
   log-analyzer-scala
 ```
@@ -42,17 +41,14 @@ Spark starts the driver on a worker.
 ```sh
 docker run --rm \
   --network docker-hadoop-spark_default \
-  -e ENABLE_INIT_DAEMON=false \
   -e SPARK_APPLICATION_DEPLOY_MODE=cluster \
   -e SPARK_APPLICATION_ARGS="--input hdfs://namenode:9000/data/logs/web_server_logs.txt --hiveDb default --sessionGapMinutes 30" \
   log-analyzer-scala
 ```
 
 You do not need to set `SPARK_APPLICATION_JAR_LOCATION` for the normal local
-cluster run. The image replaces the base image's `/app/application.jar`
-placeholder with the default HDFS path. If you provide a custom value, use an
-`hdfs://` path; the container will upload its bundled JAR there before
-submitting the job.
+cluster run. If you provide a custom value, use an `hdfs://` path; the
+container will upload its bundled JAR there before submitting the job.
 
 While the submit container is still running, inspect its logs with:
 

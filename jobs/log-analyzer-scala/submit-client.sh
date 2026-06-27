@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-export SPARK_HOME=${SPARK_HOME:-/spark}
+export SPARK_HOME=${SPARK_HOME:-/opt/spark-3.0.0}
 export SPARK_MASTER_NAME=${SPARK_MASTER_NAME:-spark-master}
 export SPARK_MASTER_PORT=${SPARK_MASTER_PORT:-7077}
 export SPARK_MASTER_URL=${SPARK_MASTER_URL:-spark://${SPARK_MASTER_NAME}:${SPARK_MASTER_PORT}}
