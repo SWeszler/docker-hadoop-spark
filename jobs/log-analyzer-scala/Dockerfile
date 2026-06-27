@@ -16,12 +16,12 @@ WORKDIR /app
 # Copy assembled jar from builder
 COPY --from=builder /app/target/scala-2.12/*-assembly-*.jar /app/target/
 
-# Copy entrypoint helper from template
-COPY template.sh /
-RUN chmod +x /template.sh
+# Copy submit helpers
+COPY run.sh submit-client.sh submit-cluster.sh /
+RUN chmod +x /run.sh /submit-client.sh /submit-cluster.sh
 COPY hive-site.xml /spark/conf/hive-site.xml
 COPY spark-defaults.conf /spark/conf/spark-defaults.conf
 
 ENV SPARK_APPLICATION_MAIN_CLASS=com.example.SessionAnalysis
 
-CMD ["/template.sh"]
+CMD ["/run.sh"]
