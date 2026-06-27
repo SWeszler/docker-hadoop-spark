@@ -86,7 +86,7 @@ services:
       - spark-master
     ports:
       - "8081:8081"
-      - "4041:4040"
+      - "4041:4041"
     volumes:
       - ./spark/conf:/opt/spark/conf
     environment:
@@ -126,6 +126,8 @@ services:
     container_name: hive-metastore-postgresql
     ports:
       - "5432:5432"
+    volumes:
+      - hive_metastore_postgresql:/var/lib/postgresql/data
 
   trino-coordinator:
     image: trinodb/trino:latest
@@ -141,4 +143,4 @@ volumes:
   hadoop_namenode:
   hadoop_datanode:
   hadoop_historyserver:
-
+  hive_metastore_postgresql:

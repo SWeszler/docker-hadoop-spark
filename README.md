@@ -60,6 +60,8 @@ To deploy an the HDFS-Spark-Hive cluster, run:
   docker-compose up
 ```
 
+Hive metastore data is stored in the `hive_metastore_postgresql` named volume, and HDFS data is stored in the Hadoop named volumes. Use `docker-compose down` to stop containers while keeping Hive table metadata and warehouse files. Avoid `docker-compose down -v` unless you intentionally want to delete those volumes.
+
 `docker-compose` creates a docker network that can be found by running `docker network list`, e.g. `docker-hadoop-spark-hive_default`.
 
 Web UIs (how to access)
@@ -76,7 +78,7 @@ Published to host (accessible via localhost):
 * DataNode: http://localhost:9864/  — mapped (9864:9864)
 * Spark Master (cluster UI): http://localhost:8080/  — mapped (8080:8080)
 * Spark worker: http://localhost:8081/  — mapped (8081:8081)
-* Spark Application UI (per-app, default port on driver): http://localhost:4040/  — mapped on spark-master (4040:4040) but only visible while an application runs
+* Spark Application UI (per-app, default port on driver): http://localhost:4040/ for client-mode drivers on spark-master, or http://localhost:4041/ for cluster-mode drivers on spark-worker-1. Only visible while an application runs.
 * HiveServer2 (JDBC): port 10000 is published (JDBC, not a web UI): connect with `jdbc:hive2://localhost:10000`
 * Hive metastore service: http://localhost:9083/ (thrift) — mapped (9083:9083) but not a browser dashboard
 * Trino coordinator UI: http://localhost:8089/  — mapped (host 8089 -> container 8080)

@@ -91,13 +91,18 @@ object SessionAnalysis {
     // Add run metadata to avoid id collisions and enable partitioned storage
     val jobRunId = java.util.UUID.randomUUID().toString
     val jobRunDate = java.time.LocalDate.now().toString
+    val jobRunTimestamp = java.sql.Timestamp.from(java.time.Instant.now())
 
     val sessionsWithMeta = sessions
       .withColumn("job_run_id", lit(jobRunId))
+      .withColumn("created_at", lit(jobRunTimestamp))
+      .withColumn("updated_at", lit(jobRunTimestamp))
       .withColumn("job_run_date", to_date(lit(jobRunDate)))
 
     val summaryWithMeta = summary
       .withColumn("job_run_id", lit(jobRunId))
+      .withColumn("created_at", lit(jobRunTimestamp))
+      .withColumn("updated_at", lit(jobRunTimestamp))
       .withColumn("job_run_date", to_date(lit(jobRunDate)))
 
     // Write sessions partitioned by job_run_date

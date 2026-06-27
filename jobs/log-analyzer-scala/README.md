@@ -63,4 +63,4 @@ Master UI at `http://localhost:8080/` and the worker/driver logs.
 - Hive tables: `<hiveDb>.sessions` (partitioned by job_run_date), `<hiveDb>.session_summary` (partitioned by job_run_date)
 - Parquet: `/data/output/sessionization/` (partitioned by job_run_date)
 
-Note: Each run adds job_run_id (UUID) and job_run_date columns; tables are partitioned by job_run_date.
+Note: Each run adds job_run_id (UUID), created_at, updated_at, and job_run_date columns; tables are partitioned by job_run_date.
