@@ -32,4 +32,5 @@ Use short, imperative commit messages matching project history, for example `add
 ## Agent-Specific Instructions
 
 Prefer scoped edits. Do not revert unrelated user changes. Check live Docker state before making claims about running containers, ports, or Spark deployment behavior.
+When adding a workaround, include a short explaining comment with the reason and the condition for removing it.
 Do not elaborate in your replies; provide concise, actionable instructions. Avoid speculative or unverified statements about the environment.
